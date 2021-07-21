@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+
+	<camelContext id="karix-sms-rest" streamCache="true"
+		xmlns="http://camel.apache.org/schema/spring">
+
+		<!-- REST Producer using Camel REST -->
+		<restConfiguration apiContextPath="docs"
+			component="servlet" contextPath="/">
+			<apiProperty key="base.path" value="/" />
+		</restConfiguration>
+
+		<rest id="karix-request">
+
+			<!-- START OF Promotional POST REST CONFIG -->
+			<post consumes="application/json" id="karix-promotional-request"
+				produces="application/json" type="com.karix.sms.model.Root">
+				<description>Consume Karix Service To Get Message.</description>
+				<param name="body" required="true" type="body" />
+
+				<responseMessage code="200"
+					message="Request accepted" />
+				<responseMessage code="-999"
+					message="INTERNAL_ERROR" />
+				<responseMessage code="-101"
+					message="API_VERSION_INVALID" />
+				<responseMessage code="-104"
+					message="INVALID_REQUEST" />
+				<responseMessage code="-105" message="IP_RESTRICTED" />
+				<responseMessage code="-106"
+					message="ACCOUNT_EXPIRED" />
+				<responseMessage code="-107"
+					message="ACCOUNT_INACTIVE" />
+				<responseMessage code="-108"
+					message="ACCOUNT_INVALID_CREDENTIALS" />
+				<responseMessage code="-109"
+					message="ENCRYPTION_OPTION_INVALID" />
+				<responseMessage code="-110"
+					message="SCHEDULE_OPTION_DISABLE" />
+				<responseMessage code="-111"
+					message="SCHEDULE_INVALID_TIME" />
+				<responseMessage code="-112"
+					message="SCHEDULE_TIME_BEYOND_TIME_BOUND" />
+				<responseMessage code="-113"
+					message="DESTINATION_EMPTY" />
+				<responseMessage code="-114"
+					message="DESTINATION_INVALID" />
+				<responseMessage code="-115" message="MESSAGE_EMPTY" />
+				<responseMessage code="-116"
+					message="INVALID_MSGTYPE" />
+				<responseMessage code="-117" message="PORT_INVALID" />
+				<responseMessage code="-118"
+					message="DLRTYPE_INVALID" />
+				<responseMessage code="-119"
+					message="EXPIRY_MINUTES_INVALID" />
+				<responseMessage code="-120"
+					message="EXPIRY_MINUTES_BEYOUND_TIME_BOUND" />
+				<responseMessage code="-121"
+					message="COUNTRY_CODE_INVALID_APPEND" />
+				<responseMessage code="-122"
+					message="URLTRACK_INVALID_OPTION" />
+				<responseMessage code="-123"
+					message="CUST_REFERENCE_ID_INVALID" />
+				<responseMessage code="-124"
+					message="CUST_REFERENCE_ID_INVALID_LENGTH" />
+				<responseMessage code="-125"
+					message="TRAI_BLOCKOUT_TIME" />
+				<responseMessage code="-126"
+					message="SCHEDULE_TRAI_BLOCKOUT_TIME" />
+				<responseMessage code="-127" message="DCS_INVALID" />
+				<responseMessage code="-128" message="UDHI_INVALID" />
+				<responseMessage code="-129"
+					message="SENDER_ID_EMPTY" />
+				<responseMessage code="-130"
+					message="INVALID_SENDERID" />
+				<responseMessage code="-131"
+					message="INVALID_TEMPLATEID" />
+				<responseMessage code="-132"
+					message="TEMPLATE_VALUES_EMPTY" />
+				<responseMessage code="-133" message="INVALID_UDH" />
+				<responseMessage code="-142"
+					message="ACCESS_VIOLATION" />
+				<responseMessage code="-143"
+					message="ERROR_REPORTING_KEY" />
+
+				<to uri="direct:karix-promotional-sms" />
+			</post>
+
+			<!-- START OF Transactional GET REST CONFIG -->
+			<get produces="text/plain" id="karix-transactional-request"
+				outType="String.class">
+				<to uri="direct:karix-transactional-sms" />
+			</get>
+
+		</rest>
+
+		<!-- SET Promotional ROUTE -->
+		<route id="karix-promotional-route">
+			<from id="_from1" uri="direct:karix-promotional-sms" />
+			<doTry id="_doTry1">
+				<setHeader name="Content-Type" id="_setHeader1">
+					<simple>application/json</simple>
+				</setHeader>
+
+				<setBody id="_setBody1">
+					<simple>{
+						"ver":"${body.ver}",
+						"key":"${body.key}",
+						"encrpt":"${body.encrpt},
+						"sch_at":"${body.sch_at}",
+						"messages":[{
+						"dest":["${body.dest}"],
+						"text":"${body.text}",
+						"send":"${body.send}",
+						"type":"${body.type}",
+						"dcs":"${body.dcs}",
+						"udhi_inc":"${body.udhi_inc}",
+						"port":"${body.port}",
+						"dlr_req":"${body.dlr_req}",
+						"vp":"${body.vp}",
+						"app_country":"${body.app_country}",
+						"country_cd":"${body.country_cd}",
+						"template_id":"${body.template_id}",
+						"template_values":["${body.template_values}"],
+						"urltrack":"${body.urltrack}",
+						"cust_ref":"${body.cust_ref}",
+						"tag":"${body.tag}",
+						"tag1":"${body.tag1}",
+						"tag2":"${body.tag2}",
+						"tag3":"${body.tag3}",
+						"tag4":"${body.tag4}",
+						"tag5":"${body.tag5}"
+						}]
+						}
+					</simple>
+				</setBody>
+
+				<bean id="_bean1"
+					method="sourceIp(REQUEST FROM SOURCE :: **********)" ref="logger" />
+				<bean id="_bean2"
+					method="request(*************** Request Received from CRM ***************)"
+					ref="logger" />
+
+				<to id="_to1" uri="{{karixPromotionalUrl}}" />
+				<bean id="_bean3"
+					method="response(SMS :: Promotional Karix RESPONSE :: ***********)"
+					ref="logger" />
+
+
+				<doCatch id="_doCatch1">
+					<exception>java.lang.Exception</exception>
+					<log id="_log1"
+						message="Exception Occured :: ********** ${exception.stacktrace}" />
+					<setHeader name="Exchange.HTTP_RESPONSE_CODE"
+						id="_setHeader2">
+						<constant>500</constant>
+					</setHeader>
+					<setBody id="_setBody2">
+						<constant>{"error":"Exception occurred. Please check logs."}
+						</constant>
+					</setBody>
+					<setHeader name="Content-Type" id="_setHeader3">
+						<simple>application/json</simple>
+					</setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+		<!-- SET Transactional ROUTE -->
+		<route id="karix-transactional-route">
+			<from id="_from2" uri="direct:karix-transactional-sms">
+			</from>
+			<doTry id="_doTry2">
+				<setHeader name="Content-Type" id="_setHeader4">
+					<simple>application/json</simple>
+				</setHeader>
+				<setHeader name="ver" id="_setHeader5">
+					<simple>${header.ver}</simple>
+				</setHeader>
+				<setHeader name="key" id="_setHeader6">
+					<simple>${header.key}</simple>
+				</setHeader>
+				<setHeader name="encrpt" id="_setHeader7">
+					<simple>${header.encrpt}</simple>
+				</setHeader>
+				<setHeader name="dest" id="_setHeader8">
+					<simple>${header.dest}</simple>
+				</setHeader>
+				<setHeader name="send" id="_setHeader9">
+					<simple>${header.send}</simple>
+				</setHeader>
+				<setHeader name="text" id="_setHeader10">
+					<simple>${header.text}</simple>
+				</setHeader>
+				<setHeader name="dlt_entity_id" id="_setHeader11">
+					<simple>${header.dlt_entity_id}</simple>
+				</setHeader>
+
+				<bean id="_bean4"
+					method="sourceIp(REQUEST FROM SOURCE :: **********)" ref="logger" />
+				<bean id="_bean5"
+					method="request(*************** Request Received from CRM ***************)"
+					ref="logger" />
+
+				<to id="_to2" uri="{{karixTransactionalUrl}}" />
+				<bean id="_bean6"
+					method="response(SMS :: Transactional Karix RESPONSE :: ***********)"
+					ref="logger" />
+
+
+				<doCatch id="_doCatch2">
+					<exception>java.lang.Exception</exception>
+					<log id="_log2"
+						message="Exception Occured :: ********** ${exception.stacktrace}" />
+					<setHeader name="Exchange.HTTP_RESPONSE_CODE"
+						id="_setHeader12">
+						<constant>500</constant>
+					</setHeader>
+					<setBody id="_setBody3">
+						<constant>{"error":"Exception occurred. Please check logs."}
+						</constant>
+					</setBody>
+					<setHeader name="Content-Type" id="_setHeader13">
+						<simple>application/json</simple>
+					</setHeader>
+				</doCatch>
+			</doTry>
+		</route>
+
+	</camelContext>
+
+	<bean
+		class="org.apache.camel.component.servlet.CamelHttpTransportServlet"
+		id="camelHttpTransportServlet" />
+	<bean
+		class="org.springframework.boot.web.servlet.ServletRegistrationBean"
+		id="servlet">
+		<property name="name" value="CamelServlet" />
+		<property name="servlet" ref="camelHttpTransportServlet" />
+		<property name="urlMappings" value="/" />
+	</bean>
+	<bean class="com.camel.karix.LogAggregator" id="logger" />
+</beans>
